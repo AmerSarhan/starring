@@ -1,69 +1,73 @@
-import Image from "next/image";
+import Link from "next/link";
 
-export default function Home() {
+import { Composer } from "@/components/composer";
+import { completedCount, publicFeed } from "@/lib/jobs";
+import { SCENES } from "@/lib/scenes";
+
+export const dynamic = "force-dynamic";
+
+export default async function Home() {
+  const [count, latest] = await Promise.all([safe(completedCount, 0), safe(() => publicFeed(6), [])]);
+
   return (
-    <div className="flex flex-col flex-1 items-center justify-center bg-zinc-50 font-sans dark:bg-black">
-      <main className="flex flex-1 w-full max-w-3xl flex-col items-center justify-between py-32 px-16 bg-white dark:bg-black sm:items-start">
-        <Image
-          className="dark:invert h-5 w-[100px]"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
-        />
-        <div className="flex flex-col items-center gap-6 text-center sm:items-start sm:text-left">
-          <h1 className="max-w-xs text-3xl font-semibold leading-10 tracking-tight text-black dark:text-zinc-50">
-            To get started, edit the{" "}
-            <code className="rounded bg-black/[.06] px-1.5 py-0.5 font-mono text-[0.9em] dark:bg-white/[.08]">
-              page.tsx
-            </code>{" "}
-            file.
-          </h1>
-          <p className="max-w-md text-lg leading-8 text-zinc-600 dark:text-zinc-400">
-            Looking for a starting point or more instructions? Head over to{" "}
-            <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Templates
-            </a>{" "}
-            or the{" "}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Learning
-            </a>{" "}
-            center.
+    <>
+      <section className="glow">
+        <div className="mx-auto w-full max-w-6xl px-4 pb-10 pt-14 sm:pt-20">
+          <p className="mb-4 inline-flex items-center gap-2 rounded-full border border-line bg-bg-elev px-3 py-1 text-xs text-fg-muted">
+            <span className="h-1.5 w-1.5 rounded-full bg-ok" /> Seedance 2.5 · face reference · audio on
           </p>
+          <h1 className="font-display text-5xl leading-[0.95] sm:text-7xl">
+            Put yourself <em className="text-accent">in the movie.</em>
+          </h1>
+          <p className="mt-5 max-w-xl text-lg text-fg-muted">
+            One selfie. Pick a scene. About a minute later you get a cinematic clip of <span className="text-fg">you</span>, with sound,
+            ready to post.
+          </p>
+          <div className="mt-6 flex flex-wrap items-center gap-3 text-sm text-fg-faint">
+            <span>
+              <span className="text-fg">{count.toLocaleString()}</span> videos made
+            </span>
+            <span>·</span>
+            <span>3 free a day</span>
+            <span>·</span>
+            <Link href="/feed" className="underline hover:text-fg">
+              see the wall
+            </Link>
+          </div>
         </div>
-        <div className="flex flex-col gap-4 text-base font-medium sm:flex-row">
-          <a
-            className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-foreground px-5 text-background transition-colors hover:bg-[#383838] dark:hover:bg-[#ccc] md:w-[158px]"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert h-[14px] w-4"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={14}
-            />
-            Deploy Now
-          </a>
-          <a
-            className="flex h-12 w-full items-center justify-center rounded-full border border-solid border-black/[.08] px-5 transition-colors hover:border-transparent hover:bg-black/[.04] dark:border-white/[.145] dark:hover:bg-[#1a1a1a] md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Documentation
-          </a>
-        </div>
-      </main>
-    </div>
+      </section>
+
+      <Composer scenes={SCENES} />
+
+      {latest.length > 0 && (
+        <section className="mx-auto w-full max-w-6xl px-4 pb-20">
+          <div className="mb-4 flex items-baseline justify-between">
+            <h2 className="font-display text-3xl">Fresh off the wall</h2>
+            <Link href="/feed" className="text-sm text-fg-muted hover:text-fg">
+              All →
+            </Link>
+          </div>
+          <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-6">
+            {latest.map((j) => (
+              <Link key={j.id} href={`/v/${j.id}`} className="group overflow-hidden rounded-xl border border-line bg-bg-card">
+                <div className={`${j.aspectRatio === "9:16" ? "aspect-[9/16]" : "aspect-video"} bg-black`}>
+                  <video src={j.videoUrl!} muted loop playsInline autoPlay preload="metadata" className="h-full w-full object-cover" />
+                </div>
+                <div className="truncate px-2 py-1.5 text-xs text-fg-muted group-hover:text-fg">{j.sceneLabel}</div>
+              </Link>
+            ))}
+          </div>
+        </section>
+      )}
+    </>
   );
+}
+
+async function safe<T>(fn: () => Promise<T>, fallback: T): Promise<T> {
+  try {
+    return await fn();
+  } catch (err) {
+    console.error("[home] query failed", err instanceof Error ? err.message : err);
+    return fallback;
+  }
 }

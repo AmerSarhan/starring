@@ -30,7 +30,7 @@ export default async function OG({ params }: { params: Promise<{ id: string }> }
         </div>
         <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
           <div style={{ fontSize: 28, color: "#a1a1aa" }}>Now showing</div>
-          <div style={{ fontSize: 88, lineHeight: 1, fontStyle: "italic" }}>“{label}”</div>
+          <div style={{ fontSize: 88, lineHeight: 1, fontStyle: "italic" }}>{`“${label}”`}</div>
           <div style={{ fontSize: 28, color: "#a1a1aa", marginTop: 12 }}>One selfie → cinematic video · Seedance 2.5 via Higgsfield API</div>
         </div>
       </div>

@@ -24,7 +24,6 @@ export async function POST(request: Request) {
           tokenPayload: JSON.stringify({ device: device.id }),
         };
       },
-      onUploadCompleted: async () => {},
     });
     const res = NextResponse.json(json);
     if (device.minted) res.cookies.set(DEVICE_COOKIE, device.id, cookieOptions);
